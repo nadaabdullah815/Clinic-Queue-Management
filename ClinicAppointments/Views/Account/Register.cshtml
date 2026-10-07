@@ -1,4 +1,4 @@
-@model ClinicQueue.ViewModels.RegisterVM
+@model ClinicAppointments.ViewModels.RegisterVM
 @{
     ViewData["Title"] = "إنشاء حساب";
 }
@@ -8,7 +8,7 @@
         <div class="auth-icon"><i class="bi bi-person-plus-fill"></i></div>
         <div class="glass-card">
             <h3 class="text-center fw-bold mb-1"> انشاء حساب</h3>
-            <p class="text-center text-muted mb-4">أنشئ حساب واحصل على موعدك بدون انتظار</p>
+            <p class="text-center text-muted mb-4">أنشئ حساب و احجز دورك دون انتظار</p>
 
             <form asp-action="Register" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>

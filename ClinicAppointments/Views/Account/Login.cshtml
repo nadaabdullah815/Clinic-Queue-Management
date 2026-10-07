@@ -1,4 +1,4 @@
-@model ClinicQueue.ViewModels.LoginVM
+@model ClinicAppointments.ViewModels.LoginVM
 @{
     ViewData["Title"] = "تسجيل الدخول";
 }
@@ -8,7 +8,7 @@
         <div class="auth-icon"><i class="bi bi-person-fill-lock"></i></div>
         <div class="glass-card">
             <h3 class="text-center fw-bold mb-1">أهلاً بك</h3>
-            <p class="text-center text-muted mb-4">سجّل دخول لتحجز موعدك</p>
+            <p class="text-center text-muted mb-4">سجّل دخول لتحجز دورك</p>
 
             <form asp-action="Login" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
@@ -30,7 +30,7 @@
                 <button type="submit" class="btn btn-gradient w-100 py-2">تسجيل الدخول</button>
             </form>
 
-            <p class="text-center mt-3 mb-0">ما عندك حساب؟ <a asp-action="Register">إنشاء حساب</a></p>
+            <p class="text-center mt-3 mb-0">ليس لديك حساب؟ <a asp-action="Register">إنشاء حساب</a></p>
         </div>
     </div>
 </div>

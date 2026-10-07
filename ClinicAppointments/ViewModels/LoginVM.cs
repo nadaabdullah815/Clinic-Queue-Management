@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ClinicQueue.ViewModels;
+namespace ClinicAppointments.ViewModels;
 
 public class LoginVM
 {

@@ -1,4 +1,4 @@
-namespace ClinicQueue.Models;
+namespace ClinicAppointments.Models;
 
 public enum BookingStatus
 {

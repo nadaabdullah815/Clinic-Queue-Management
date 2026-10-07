@@ -1,15 +1,18 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using ClinicAppointments.Models;
+using ClinicAppointments.Services.Interfaces;
 
 namespace ClinicAppointments.Controllers;
 
 public class HomeController : Controller
 {
-    public IActionResult Index()
-    {
-        return View();
-    }
+    private readonly IDoctorProvider _doctors;
+    public HomeController(IDoctorProvider doctors) 
+    => _doctors = doctors;
+
+    public async Task<IActionResult> Index() 
+    => View(await _doctors.GetAsync());
 
     public IActionResult Privacy()
     {

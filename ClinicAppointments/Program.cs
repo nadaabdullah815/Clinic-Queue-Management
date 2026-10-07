@@ -1,6 +1,9 @@
-using ClinicQueue.Data;
+using ClinicAppointments.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using ClinicAppointments.Services;
+using ClinicAppointments.Services.Interfaces;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +13,8 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IDoctorProvider, DoctorProvider>();
+builder.Services.AddScoped<QueueService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(o =>

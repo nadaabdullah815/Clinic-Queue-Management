@@ -105,17 +105,25 @@
         .forEach(([id, v]) => { animateNumber($(id), v); $(id).dataset.value = v; });
     }
 
-    function updateState(d, silent) {
+       function updateState(d, silent) {
       const p = d.yourNumber > 0 ? Math.min(100, Math.round(d.currentNumber * 100 / d.yourNumber)) : 0;
       $('ringFg').style.setProperty('--progress', p);
+      card.dataset.yourTurn = d.isYourTurn;
 
-      let state = 'wait', text = 'ارتاحي، الصفحة بتتحدث لحالها';
-      if (d.yourNumber === 0) { state = 'none'; text = 'ما عندك دور اليوم'; }
-      else if (d.patientsBefore === 0) { state = 'now'; text = 'دورك هلق! توجّه للعيادة'; }
-      else if (d.patientsBefore <= near) { state = 'near'; text = 'قرّب دورك، جهّز حالك'; }
+      let state = 'wait', text = 'تتحدث هذه الصفحة تلقائيا دون الحاجة الى إعادة التحميل';
+      if (d.yourNumber === 0) { state = 'none'; text = ' لا يوجد لديك دور فعّال حالياً'; }
+      else if (d.isYourTurn) { state = 'now'; text = ' حان دورك الان! تفضل بالتوجه الى العيادة'; }
+      else if (d.patientsBefore <= near) {
+        state = 'near';
+        text = d.patientsBefore === 0 ? 'اقترب دورك، يُرجى الاستعداد' : ' أنت التالي، يُرجى الاستعداد';
+      }
 
       card.dataset.state = state;
       $('queueMsg').textContent = text;
+
+      // زر الإلغاء بيختفي لما الطبيب ينادي عليك
+      const cb = document.getElementById('cancelBtn');
+      if (cb) cb.classList.toggle('d-none', !d.canCancel);
 
       const close = state === 'now' || state === 'near';
       if (close && !notified && !silent) {
@@ -128,9 +136,10 @@
     const read = () => ({
       currentNumber: +$('currentNum').dataset.value,
       yourNumber: +$('yourNum').dataset.value,
-      patientsBefore: +$('beforeNum').dataset.value
+      patientsBefore: +$('beforeNum').dataset.value,
+      isYourTurn: card.dataset.yourTurn === 'true',
+      canCancel: true
     });
-
     updateState(read(), true);   // الحالة الأولية بدون إشعار
 
     async function poll() {

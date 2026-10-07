@@ -1,7 +1,7 @@
-using ClinicQueue.Models;
+using ClinicAppointments.Models;
 using Microsoft.AspNetCore.Identity;
 
-namespace ClinicQueue.Data;
+namespace ClinicAppointments.Data;
 
 public static class DbSeeder
 {

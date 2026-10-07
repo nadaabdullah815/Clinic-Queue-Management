@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ClinicQueue.Models;
+namespace ClinicAppointments.Models;
 
 public class Doctor
 {

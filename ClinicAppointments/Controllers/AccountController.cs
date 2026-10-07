@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using ClinicQueue.Data;
-using ClinicQueue.Models;
-using ClinicQueue.ViewModels;
+using ClinicAppointments.Data;
+using ClinicAppointments.Models;
+using ClinicAppointments.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace ClinicQueue.Controllers;
+namespace ClinicAppointments.Controllers;
 
 public class AccountController : Controller
 {

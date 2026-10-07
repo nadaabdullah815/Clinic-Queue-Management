@@ -23,19 +23,12 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">الرئيسية</a></li>
 
-                    @* نفعّل هدول لما نبني الصفحات:
-                    @if (User.IsInRole("Patient"))
+                   @if (User.IsInRole("Patient"))
                     {
                         <li class="nav-item"><a class="nav-link" asp-controller="Booking" asp-action="Book">احجز دور</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Booking" asp-action="MyQueue">دوري</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Booking" asp-action="History">حجوزاتي</a></li>
                     }
-                    @if (User.IsInRole("Doctor"))
-                    {
-                        <li class="nav-item"><a class="nav-link" asp-controller="DoctorQueue" asp-action="Dashboard">لوحة التحكم</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="DoctorQueue" asp-action="Today">قائمة اليوم</a></li>
-                    }
-                    *@
                 </ul>
 
                 <ul class="navbar-nav align-items-lg-center gap-lg-2">

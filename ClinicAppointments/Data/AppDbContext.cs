@@ -1,7 +1,7 @@
-using ClinicQueue.Models;
+using ClinicAppointments.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace ClinicQueue.Data;
+namespace ClinicAppointments.Data;
 
 public class AppDbContext : DbContext
 {

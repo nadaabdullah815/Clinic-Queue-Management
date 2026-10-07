@@ -1,4 +1,4 @@
-@model ClinicQueue.ViewModels.QueueStatusVM
+@model ClinicAppointments.ViewModels.QueueStatusVM
 @{
     var progress = Model.YourNumber > 0
         ? Math.Min(100, (int)Math.Round(Model.CurrentNumber * 100.0 / Model.YourNumber))
@@ -6,6 +6,7 @@
 }
 
 <div id="queueCard" class="queue-card reveal" data-state="wait" data-near="2"
+     data-your-turn="@Model.IsYourTurn.ToString().ToLower()"
      data-status-url="@Url.Action("Status", "Booking")">
 
     <div class="queue-card-head">
