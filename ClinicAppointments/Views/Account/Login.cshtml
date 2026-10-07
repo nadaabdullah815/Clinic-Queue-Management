@@ -1,0 +1,40 @@
+@model ClinicQueue.ViewModels.LoginVM
+@{
+    ViewData["Title"] = "تسجيل الدخول";
+}
+
+<div class="auth-wrap">
+    <div class="auth-card reveal">
+        <div class="auth-icon"><i class="bi bi-person-fill-lock"></i></div>
+        <div class="glass-card">
+            <h3 class="text-center fw-bold mb-1">أهلاً بك</h3>
+            <p class="text-center text-muted mb-4">سجّل دخول لتحجز موعدك</p>
+
+            <form asp-action="Login" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Phone" class="form-control" placeholder="رقم الهاتف" autocomplete="off" data-no-autofill/>
+                    <label asp-for="Phone"></label>
+                    <span asp-validation-for="Phone" class="text-danger small"></span>
+                </div>
+
+                <div class="form-floating mb-4 pw-wrap">
+                    <input asp-for="Password" class="form-control" placeholder="كلمة المرور" autocomplete="new-password" data-no-autofill/>
+                    <label asp-for="Password"></label>
+                    <button type="button" class="pw-toggle" data-toggle-password><i class="bi bi-eye"></i></button>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <button type="submit" class="btn btn-gradient w-100 py-2">تسجيل الدخول</button>
+            </form>
+
+            <p class="text-center mt-3 mb-0">ما عندك حساب؟ <a asp-action="Register">إنشاء حساب</a></p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
