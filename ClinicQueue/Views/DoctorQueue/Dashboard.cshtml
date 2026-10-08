@@ -1,0 +1,210 @@
+@model ClinicQueue.ViewModels.DoctorDashboardVM
+@using ClinicQueue.Models
+@{
+    ViewData["Title"] = "لوحة التحكم";
+    var canNext = Model.Current != null || Model.Next != null;
+
+    (string Text, string Css) Badge(BookingStatus s) => s switch
+    {
+        BookingStatus.Waiting    => ("بالانتظار", "text-bg-warning"),
+        BookingStatus.InProgress => ("عند الطبيب", "text-bg-primary"),
+        BookingStatus.Done       => ("تمت المعاينة", "text-bg-success"),
+        BookingStatus.Skipped    => ("تم التخطي", "text-bg-secondary"),
+        _                        => ("ملغي", "text-bg-danger")
+    };
+}
+
+<div class="mx-auto" style="max-width:820px">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 reveal">
+        <div>
+            <h3 class="fw-bold mb-0">@Model.DoctorName</h3>
+            <div class="text-muted">
+                <i class="bi bi-calendar3"></i>
+                @Model.Date.ToString("dddd، d MMMM yyyy", new System.Globalization.CultureInfo("ar"))
+            </div>
+        </div>
+
+        <form asp-action="ToggleBooking" method="post"
+              data-confirm="@(Model.IsAcceptingBookings ? "هل تريد إيقاف استقبال الحجوزات؟" : "هل تريد فتح باب الحجز؟")">
+            <input type="hidden" name="open" value="@((!Model.IsAcceptingBookings).ToString().ToLower())" />
+            <button type="submit" class="btn @(Model.IsAcceptingBookings ? "btn-outline-danger" : "btn-success")">
+                <i class="bi @(Model.IsAcceptingBookings ? "bi-lock" : "bi-unlock")"></i>
+                @(Model.IsAcceptingBookings ? "إيقاف استقبال الحجوزات" : "فتح باب الحجز")
+            </button>
+        </form>
+    </div>
+
+    <div class="glass-card mb-4 reveal">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex flex-column gap-1">
+                <div>
+                    <i class="bi bi-clock"></i> ساعات الدوام:
+                    <strong dir="ltr">@Model.WorkStartTime.ToString("HH:mm") - @Model.WorkEndTime.ToString("HH:mm")</strong>
+                </div>
+                <div>
+                    <i class="bi bi-people"></i> الحجوزات:
+                    <strong>@Model.BookedCount / @Model.DailyCapacity</strong>
+                    @if (Model.IsFull)
+                    {
+                        <span class="badge text-bg-danger ms-1">اكتمل العدد</span>
+                    }
+                </div>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#hoursForm">
+                <i class="bi bi-pencil-square"></i> تعديل
+            </button>
+        </div>
+
+        <div class="progress mt-3" style="height:8px">
+            <div class="progress-bar @(Model.IsFull ? "bg-danger" : "")"
+                 style="width:@(Math.Min(100, Model.BookedCount * 100 / Math.Max(1, Model.DailyCapacity)))%"></div>
+        </div>
+
+        <div class="collapse" id="hoursForm">
+            <form asp-action="UpdateHours" method="post" class="row g-3 align-items-end mt-1">
+                <div class="col-5">
+                    <label class="form-label small">بداية الدوام</label>
+                    <input type="time" name="start" class="form-control"
+                           value="@Model.WorkStartTime.ToString("HH:mm")" required />
+                </div>
+                <div class="col-5">
+                    <label class="form-label small">نهاية الدوام</label>
+                    <input type="time" name="end" class="form-control"
+                           value="@Model.WorkEndTime.ToString("HH:mm")" required />
+                </div>
+                <div class="col-2">
+                    <button type="submit" class="btn btn-gradient w-100">حفظ</button>
+                </div>
+            </form>
+
+            <hr />
+
+            <form asp-action="UpdateCapacity" method="post" class="row g-3 align-items-end">
+                <div class="col-10">
+                    <label class="form-label small">الحد الأقصى للحجوزات في اليوم</label>
+                    <input type="number" name="capacity" min="1" max="500" class="form-control"
+                           value="@Model.DailyCapacity" required />
+                </div>
+                <div class="col-2">
+                    <button type="submit" class="btn btn-gradient w-100">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="current-card reveal" data-delay="1">
+        @if (Model.Current != null)
+        {
+            <div class="small opacity-75">المريض الحالي</div>
+            <div class="current-number">#<span class="count-up" data-value="@Model.Current.QueueNumber">@Model.Current.QueueNumber</span></div>
+            <div class="fs-4 fw-bold">@Model.Current.User.Name</div>
+            <div class="opacity-75"><i class="bi bi-telephone"></i> <span dir="ltr">@Model.Current.User.Phone</span></div>
+        }
+        else
+        {
+            <div class="small opacity-75">المريض الحالي</div>
+            <div class="current-number"><i class="bi bi-person-dash"></i></div>
+            <div class="fs-4 fw-bold">لا يوجد مريض حالياً</div>
+        }
+
+        <div class="next-hint">
+            @if (Model.Next != null)
+            {
+                <span>التالي: <strong>#@Model.Next.QueueNumber</strong> · @Model.Next.User.Name</span>
+            }
+            else
+            {
+                <span>لا يوجد مرضى بالانتظار</span>
+            }
+        </div>
+
+        <form asp-action="Next" method="post" class="mt-3">
+            <button type="submit" class="btn btn-light btn-lg w-100 fw-bold" disabled="@(!canNext)">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+                @(Model.Current != null
+                    ? (Model.Next != null ? "إنهاء المعاينة واستدعاء التالي" : "إنهاء المعاينة")
+                    : "استدعاء المريض الأول")
+            </button>
+        </form>
+    </div>
+
+    <div class="row g-3 my-3">
+        <div class="col-4 reveal" data-delay="1">
+            <div class="mini-stat">
+                <div class="text-muted small">بالانتظار</div>
+                <div class="num count-up" data-value="@Model.WaitingCount">@Model.WaitingCount</div>
+            </div>
+        </div>
+        <div class="col-4 reveal" data-delay="2">
+            <div class="mini-stat">
+                <div class="text-muted small">تمت معاينتهم</div>
+                <div class="num count-up" data-value="@Model.DoneCount">@Model.DoneCount</div>
+            </div>
+        </div>
+        <div class="col-4 reveal" data-delay="3">
+            <div class="mini-stat">
+                <div class="text-muted small">إجمالي الحجوزات</div>
+                <div class="num count-up" data-value="@Model.Bookings.Count">@Model.Bookings.Count</div>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="fw-bold mt-4 mb-3 reveal"><i class="bi bi-list-ol"></i> قائمة اليوم</h5>
+
+    @if (!Model.Bookings.Any())
+    {
+        <div class="empty-state glass-card reveal">
+            <i class="bi bi-inbox"></i>
+            <h5 class="fw-bold mt-3">لا توجد حجوزات اليوم حتى الآن</h5>
+        </div>
+    }
+    else
+    {
+        @foreach (var b in Model.Bookings)
+        {
+            var badge = Badge(b.Status);
+            var active = b.Status == BookingStatus.Waiting || b.Status == BookingStatus.InProgress;
+
+            <div class="history-item reveal @(b.Status == BookingStatus.InProgress ? "is-current" : "")">
+                <div class="num-bubble">@b.QueueNumber</div>
+
+                <div class="flex-grow-1">
+                    <div class="fw-bold">@b.User.Name</div>
+                    <div class="text-muted small" dir="ltr" style="text-align:start">@b.User.Phone</div>
+                </div>
+
+                <span class="badge rounded-pill @badge.Css px-3 py-2">@badge.Text</span>
+
+                <div class="row-actions d-flex gap-1">
+                    @if (active)
+                    {
+                        <form asp-action="Skip" asp-route-id="@b.Id" method="post" data-confirm="تخطي هذا الدور؟">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm" title="تخطي"><i class="bi bi-skip-forward-fill"></i></button>
+                        </form>
+                        <form asp-action="Cancel" asp-route-id="@b.Id" method="post" data-confirm="إلغاء هذا الدور؟">
+                            <button type="submit" class="btn btn-outline-danger btn-sm" title="إلغاء"><i class="bi bi-x-lg"></i></button>
+                        </form>
+                    }
+                    else if (b.Status == BookingStatus.Skipped)
+                    {
+                        <form asp-action="Requeue" asp-route-id="@b.Id" method="post">
+                            <button type="submit" class="btn btn-outline-primary btn-sm" title="إعادة إلى الانتظار"><i class="bi bi-arrow-counterclockwise"></i></button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // تحديث تلقائي كل 30 ثانية، ويتوقف أثناء تعديل الإعدادات
+        setInterval(() => {
+            const editing = document.querySelector('#hoursForm.show');
+            if (!document.hidden && !editing) location.reload();
+        }, 30000);
+    </script>
+}

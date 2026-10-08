@@ -1,0 +1,44 @@
+@model List<ClinicQueue.Models.Booking>
+@using ClinicQueue.Models
+@{
+    ViewData["Title"] = "حجوزاتي";
+
+    (string Text, string Css) Badge(BookingStatus s) => s switch
+    {
+        BookingStatus.Waiting    => ("بالانتظار", "text-bg-warning"),
+        BookingStatus.InProgress => ("عند الطبيب", "text-bg-primary"),
+        BookingStatus.Done       => ("تمت المعاينة", "text-bg-success"),
+        BookingStatus.Skipped    => ("تم التخطي", "text-bg-secondary"),
+         BookingStatus.Expired    => ("انتهى دون معاينة", "text-bg-dark"),
+        _                        => ("ملغي", "text-bg-danger")
+    };
+}
+
+<div class="mx-auto" style="max-width:720px">
+    <h3 class="fw-bold mb-4 reveal"><i class="bi bi-clock-history"></i> حجوزاتي</h3>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state glass-card reveal">
+            <i class="bi bi-inbox"></i>
+            <h5 class="fw-bold mt-3"> لا توجد حجوزات سابقة</h5>
+            <a class="btn btn-gradient px-4 mt-2" asp-action="Book">احجز أول دور</a>
+        </div>
+    }
+    else
+    {
+        @for (var i = 0; i < Model.Count; i++)
+        {
+            var b = Model[i];
+            var badge = Badge(b.Status);
+            <div class="history-item reveal" style="transition-delay:@(Math.Min(i, 8) * 60)ms">
+                <div class="num-bubble">@b.QueueNumber</div>
+                <div class="flex-grow-1">
+                    <div class="fw-bold">@b.Date.ToString("yyyy/MM/dd")</div>
+                    <div class="text-muted small">@b.CreatedAt.ToLocalTime().ToString("HH:mm")</div>
+                </div>
+                <span class="badge rounded-pill @badge.Css px-3 py-2">@badge.Text</span>
+            </div>
+        }
+    }
+</div>

@@ -1,0 +1,47 @@
+@model ClinicQueue.ViewModels.QueueStatusVM
+@{
+    ViewData["Title"] = "دوري";
+}
+
+@if (Model.YourNumber > 0)
+{
+    <div class="mx-auto" style="max-width:640px">
+        <partial name="_QueueCard" model="Model" />
+
+        @if (Model.CanCancel)
+        {
+            <div class="text-center mt-4">
+                <button id="cancelBtn" type="button" class="btn btn-outline-danger px-4"
+                        data-bs-toggle="modal" data-bs-target="#cancelModal">
+                    <i class="bi bi-x-circle"></i> إلغاء الحجز
+                </button>
+            </div>
+
+            <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content p-4 text-center" style="border-radius:24px">
+                        <div class="feature-icon" style="background:linear-gradient(135deg,#f87171,#dc2626)">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        <h5 class="fw-bold">إلغاء الحجز؟</h5>
+                        <p class="text-muted"> سيؤدي الإلغاء إلى فقدان رقمك في الدور، وستحتاج إلى الحجز من جديد </p>
+                        <form asp-action="Cancel" method="post" class="d-flex gap-2 justify-content-center">
+                            <input type="hidden" name="id" value="@Model.BookingId" />
+                            <button type="submit" class="btn btn-danger px-4">نعم، ألغِ</button>
+                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">رجوع</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state glass-card mx-auto reveal" style="max-width:520px">
+        <i class="bi bi-calendar2-x"></i>
+        <h4 class="fw-bold mt-3">لا يوجد لديك دور فعّال اليوم</h4>
+        <p class="text-muted">احجز دورك وتابع ترتيبك من هنا.</p>
+        <a class="btn btn-gradient px-4" asp-action="Book">احجز دور</a>
+    </div>
+}

@@ -1,0 +1,48 @@
+@model ClinicQueue.ViewModels.QueueStatusVM
+@{
+    var progress = Model.YourNumber > 0
+        ? Math.Min(100, (int)Math.Round(Model.CurrentNumber * 100.0 / Model.YourNumber))
+        : 0;
+}
+
+<div id="queueCard" class="queue-card reveal" data-state="wait" data-near="2"
+     data-your-turn="@Model.IsYourTurn.ToString().ToLower()"
+     data-status-url="@Url.Action("Status", "Booking")">
+
+    <div class="queue-card-head">
+        <div>
+            <div class="small opacity-75">@Model.DoctorName</div>
+            <div class="fw-bold">
+                <i class="bi bi-calendar3"></i>
+                @Model.Date.ToString("dddd، d MMMM", new System.Globalization.CultureInfo("ar"))
+            </div>
+        </div>
+        <span class="live-dot" title="يتحدث تلقائياً"></span>
+    </div>
+
+    <div class="queue-body">
+        <div class="ring">
+            <svg viewBox="0 0 120 120">
+                <circle class="ring-bg" cx="60" cy="60" r="52" />
+                <circle id="ringFg" class="ring-fg" cx="60" cy="60" r="52" style="--progress:@progress" />
+            </svg>
+            <div class="ring-center">
+                <div id="beforeNum" class="ring-number count-up" data-value="@Model.PatientsBefore">@Model.PatientsBefore</div>
+                <div class="ring-label">قبلك</div>
+            </div>
+        </div>
+
+        <div class="queue-stats">
+            <div class="stat">
+                <span class="stat-label">الدور الحالي</span>
+                <span id="currentNum" class="stat-value count-up" data-value="@Model.CurrentNumber">@Model.CurrentNumber</span>
+            </div>
+            <div class="stat stat-you">
+                <span class="stat-label">رقمك</span>
+                <span id="yourNum" class="stat-value count-up" data-value="@Model.YourNumber">@Model.YourNumber</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="queueMsg" class="queue-msg"></div>
+</div>
