@@ -3,7 +3,7 @@ using ClinicQueue.Models;
 using ClinicQueue.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using ClinicQueue.Services.Interfaces;
-using ClinicQueue.Helper;
+using ClinicQueue.Helpers;
 namespace ClinicQueue.Services;
 
 
@@ -11,15 +11,15 @@ public class DoctorQueueService :IDoctorQueueService
 {
     private readonly AppDbContext _db;
     private readonly IDoctorProvider _doctors;
-    private readonly IPatientHelperFunctions _helper;
-    public DoctorQueueService(AppDbContext db, IDoctorProvider doctors, IPatientHelperFunctions helper)
+    private readonly IQueueHelper _helper;
+    public DoctorQueueService(AppDbContext db, IDoctorProvider doctors, IQueueHelper helper)
     {
         _db = db;
         _doctors = doctors;
         _helper = helper;
     } 
 
-    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Now);
+  private static DateOnly Today => QueueClock.Today;
 
      public async Task<List<Booking>> GetTodayAsync()
     {
@@ -70,14 +70,15 @@ public class DoctorQueueService :IDoctorQueueService
      // إعادة مريض متخطّى إلى قائمة الانتظار (برقمه القديم، فيُستدعى كأول واحد)
     public async Task<bool> RequeueAsync(int bookingId)
     {
+        var today = Today;
         var booking = await _db.Bookings.FirstOrDefaultAsync(b =>
-            b.Id == bookingId && b.Status == BookingStatus.Skipped);
+            b.Id == bookingId && b.Date == today && b.Status == BookingStatus.Skipped);
         if (booking == null) return false;
     
         booking.Status = BookingStatus.Waiting;
         await _db.SaveChangesAsync();
         return true;
-   }
+    }
 
     public async Task UpdateWorkingHoursAsync(TimeOnly start, TimeOnly end)
     {
@@ -112,21 +113,12 @@ public class DoctorQueueService :IDoctorQueueService
         return true;
     }
     
-     // أي حجز من يوم سابق ما زال بالانتظار أو عند الطبيب يُغلق تلقائياً
-    private async Task ExpireOldBookingsAsync()
-    {
-        var today = Today;
-        await _db.Bookings
-            .Where(b => b.Date < today &&
-                        (b.Status == BookingStatus.Waiting || b.Status == BookingStatus.InProgress))
-            .ExecuteUpdateAsync(s => s.SetProperty(b => b.Status, BookingStatus.Expired));
-    }
 
     public async Task<DoctorHistoryVM> GetDoctorHistoryAsync(
     DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, string? search,
     int page, int pageSize = 20)
     {
-        await ExpireOldBookingsAsync();
+        await  _helper.ExpireOldBookingsAsync();
         var doctor = await _doctors.GetAsync();
     
         var baseQuery = _db.Bookings.AsNoTracking().Where(b => b.DoctorId == doctor.Id);
@@ -137,7 +129,10 @@ public class DoctorQueueService :IDoctorQueueService
         if (!string.IsNullOrWhiteSpace(search))
         {
             var s = search.Trim();
-            baseQuery = baseQuery.Where(b => b.User.Name.Contains(s) || b.User.Phone.Contains(s));
+            var pattern = ArabicSearch.ToLikePattern(s);
+        
+            baseQuery = baseQuery.Where(b =>
+                EF.Functions.Like(b.User.Name, pattern) || b.User.Phone.Contains(s));
         }
     
         // ملخّص الفترة (بدون فلتر الحالة)

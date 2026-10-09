@@ -4,6 +4,7 @@ using ClinicQueue.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ClinicQueue.Services.Interfaces;
+using ClinicQueue.Helpers;
 namespace ClinicQueue.Controllers;
 
 [Authorize(Roles = "Doctor")]
@@ -27,7 +28,7 @@ public class DoctorQueueController : Controller
         var vm = new DoctorDashboardVM
         {
             DoctorName = doctor.Name,
-            Date = DateOnly.FromDateTime(DateTime.Now),
+            Date = QueueClock.Today,
             WorkStartTime = doctor.WorkStartTime,
             WorkEndTime = doctor.WorkEndTime,
             DailyCapacity = doctor.DailyCapacity,

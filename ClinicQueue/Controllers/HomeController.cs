@@ -9,13 +9,13 @@ namespace ClinicQueue.Controllers;
 public class HomeController : Controller
 {
     private readonly IDoctorProvider _doctors;
-    private readonly IPatientQueueService _PattientQueue;
+    private readonly IPatientQueueService _PatientQueue;
     private readonly IDoctorQueueService _doctorQueue;
 
     public HomeController(IDoctorProvider doctors, IPatientQueueService patientQueue, IDoctorQueueService doctorQueue)
     {
         _doctors = doctors;
-        _PattientQueue = patientQueue;
+        _PatientQueue = patientQueue;
         _doctorQueue = doctorQueue;
     }
 

@@ -3,17 +3,17 @@ using ClinicQueue.Models;
 using ClinicQueue.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using ClinicQueue.Services.Interfaces;
-using ClinicQueue.Helper;
+using ClinicQueue.Helpers;
 
 namespace ClinicQueue.Services;
 
-public record BookResult(bool Success, string Message);
-public class PattientQueueService :IPatientQueueService
+
+public class PatientQueueService :IPatientQueueService
 {
     private readonly AppDbContext _db;
     private readonly IDoctorProvider _doctors;
-    private readonly IPatientHelperFunctions _helper;
-    public PattientQueueService(AppDbContext db, IDoctorProvider doctors, IPatientHelperFunctions helper)
+    private readonly IQueueHelper _helper;
+    public PatientQueueService(AppDbContext db, IDoctorProvider doctors, IQueueHelper helper)
     {
         _db = db;
         _doctors = doctors;
@@ -29,7 +29,7 @@ public class PattientQueueService :IPatientQueueService
         if (!doctor.IsAcceptingBookings)
             return new(false, "الحجز مغلق حالياً");
         
-        var now = TimeOnly.FromDateTime(DateTime.Now);
+       var now = QueueClock.TimeNow;
         if (now > doctor.WorkEndTime)
             return new(false, "انتهى دوام اليوم");
 
@@ -148,7 +148,7 @@ public class PattientQueueService :IPatientQueueService
 
     public async Task<List<Booking>> GetHistoryAsync(int userId)
     {
-        await ExpireOldBookingsAsync();
+        await  _helper.ExpireOldBookingsAsync();
     
         return await _db.Bookings.AsNoTracking()
             .Where(b => b.UserId == userId)
@@ -156,14 +156,5 @@ public class PattientQueueService :IPatientQueueService
             .ThenByDescending(b => b.QueueNumber)
             .ToListAsync();
     }
-
-        // أي حجز من يوم سابق ما زال بالانتظار أو عند الطبيب يُغلق تلقائياً
-    private async Task ExpireOldBookingsAsync()
-    {
-        var today = Today;
-        await _db.Bookings
-            .Where(b => b.Date < today &&
-                        (b.Status == BookingStatus.Waiting || b.Status == BookingStatus.InProgress))
-            .ExecuteUpdateAsync(s => s.SetProperty(b => b.Status, BookingStatus.Expired));
-    }     
+ 
 }
