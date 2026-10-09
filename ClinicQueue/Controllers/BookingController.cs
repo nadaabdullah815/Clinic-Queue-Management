@@ -8,9 +8,9 @@ namespace ClinicQueue.Controllers;
 [Authorize(Roles = "Patient")]
 public class BookingController : Controller
 {
-    private readonly QueueService _queue;
+    private readonly IPatientQueueService _queue;
 
-    public BookingController(QueueService queue) => _queue = queue;
+    public BookingController(IPatientQueueService queueService) => _queue = queueService;
 
     private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 

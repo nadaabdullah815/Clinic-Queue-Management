@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using ClinicQueue.Services;
 using ClinicQueue.Services.Interfaces;
-
+using ClinicQueue.Helper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +14,9 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IDoctorProvider, DoctorProvider>();
-builder.Services.AddScoped<QueueService>();
+builder.Services.AddScoped<IDoctorQueueService, DoctorQueueService>();
+builder.Services.AddScoped<IPatientQueueService, PattientQueueService>();
+builder.Services.AddScoped<IPatientHelperFunctions, PatientHelperFunctions>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(o =>

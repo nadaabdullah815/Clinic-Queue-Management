@@ -9,17 +9,19 @@ namespace ClinicQueue.Controllers;
 public class HomeController : Controller
 {
     private readonly IDoctorProvider _doctors;
-    private readonly QueueService _queue;
+    private readonly IPatientQueueService _PattientQueue;
+    private readonly IDoctorQueueService _doctorQueue;
 
-    public HomeController(IDoctorProvider doctors, QueueService queue)
+    public HomeController(IDoctorProvider doctors, IPatientQueueService patientQueue, IDoctorQueueService doctorQueue)
     {
         _doctors = doctors;
-        _queue = queue;
+        _PattientQueue = patientQueue;
+        _doctorQueue = doctorQueue;
     }
 
     public async Task<IActionResult> Index()
     {
-        ViewBag.IsFull = await _queue.IsFullAsync();
+        ViewBag.IsFull = await _doctorQueue.IsFullAsync();
         return View(await _doctors.GetAsync());
     }
 

@@ -9,12 +9,12 @@ namespace ClinicQueue.Controllers;
 [Authorize(Roles = "Doctor")]
 public class DoctorQueueController : Controller
 {
-    private readonly QueueService _queue;
+    private readonly IDoctorQueueService _queue;
     private readonly IDoctorProvider _doctors;
 
-    public DoctorQueueController(QueueService queue, IDoctorProvider doctors)
+    public DoctorQueueController(IDoctorQueueService queueService, IDoctorProvider doctors)
     {
-        _queue = queue;
+        _queue = queueService;
         _doctors = doctors;
     }
 
