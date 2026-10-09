@@ -111,4 +111,16 @@ public class DoctorQueueController : Controller
         TempData["Success"] = "تم تحديث الحد الأقصى للحجوزات";
         return RedirectToAction(nameof(Dashboard));
     }
+
+    [HttpGet]
+    public async Task<IActionResult> History(
+        DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, string? search, int page = 1)
+    {
+        // إذا كانت الفترة معكوسة نبدّل بين التاريخين بدل ما نرفض
+        if (dateFrom.HasValue && dateTo.HasValue && dateFrom > dateTo)
+            (dateFrom, dateTo) = (dateTo, dateFrom);
+    
+        var vm = await _queue.GetDoctorHistoryAsync(dateFrom, dateTo, status, search, page);
+        return View(vm);
+    }
 }

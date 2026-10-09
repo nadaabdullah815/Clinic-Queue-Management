@@ -176,4 +176,22 @@
     const msg = e.target.dataset && e.target.dataset.confirm;
     if (msg && !window.confirm(msg)) e.preventDefault();
   }, true);
+  // حقول التاريخ: ممنوع اختيار تاريخ مستقبلي (حسب تاريخ جهاز المستخدم)
+  const pad = (n) => String(n).padStart(2, '0');
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  document.querySelectorAll('input[type=date][data-max-today]').forEach(i => (i.max = todayStr));
+
+  // ربط الحقلين: "إلى" لا يسبق "من"، و"من" لا يتجاوز "إلى"
+  const dFrom = document.querySelector('input[name="dateFrom"]');
+  const dTo = document.querySelector('input[name="dateTo"]');
+  if (dFrom && dTo) {
+    const sync = () => {
+      dTo.min = dFrom.value || '';
+      dFrom.max = dTo.value && dTo.value < todayStr ? dTo.value : todayStr;
+    };
+    dFrom.addEventListener('change', sync);
+    dTo.addEventListener('change', sync);
+    sync();
+  }
 })();

@@ -1,0 +1,173 @@
+@model ClinicQueue.ViewModels.DoctorHistoryVM
+@using ClinicQueue.Models
+@{
+    ViewData["Title"] = "سجل الحجوزات";
+
+    var ar = new System.Globalization.CultureInfo("ar");
+    var today = DateOnly.FromDateTime(DateTime.Now);
+    string D(DateOnly d) => d.ToString("yyyy-MM-dd");
+
+    var labels = new Dictionary<BookingStatus, string>
+    {
+        [BookingStatus.Done]       = "تمت المعاينة",
+        [BookingStatus.Waiting]    = "بالانتظار",
+        [BookingStatus.InProgress] = "عند الطبيب",
+        [BookingStatus.Skipped]    = "تم التخطي",
+        [BookingStatus.Cancelled]  = "ملغي",
+        [BookingStatus.Expired]    = "انتهى دون معاينة"
+    };
+
+    var tiles = new[] { BookingStatus.Done, BookingStatus.Skipped, BookingStatus.Cancelled, BookingStatus.Expired };
+
+    // يبني روابط تحافظ على الفلاتر الحالية
+    Dictionary<string, string> QS(BookingStatus? st = null, int? pg = null)
+    {
+        var d = new Dictionary<string, string>();
+        if (Model.DateFrom.HasValue) d["dateFrom"] = D(Model.DateFrom.Value);
+        if (Model.DateTo.HasValue)   d["dateTo"] = D(Model.DateTo.Value);
+        if (!string.IsNullOrWhiteSpace(Model.Search)) d["search"] = Model.Search!;
+        if (st.HasValue) d["status"] = st.Value.ToString();
+        if (pg.HasValue && pg.Value > 1) d["page"] = pg.Value.ToString();
+        return d;
+    }
+}
+
+<div class="mx-auto" style="max-width:980px">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 reveal">
+        <h3 class="fw-bold mb-0"><i class="bi bi-clock-history"></i> سجل الحجوزات</h3>
+        <a class="btn btn-outline-primary btn-sm" asp-action="Dashboard">
+            <i class="bi bi-arrow-right"></i> العودة للوحة التحكم
+        </a>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-3 reveal">
+        <a class="btn btn-sm btn-outline-secondary" asp-action="History"
+           asp-route-dateFrom="@D(today)" asp-route-dateTo="@D(today)">اليوم</a>
+        <a class="btn btn-sm btn-outline-secondary" asp-action="History"
+           asp-route-dateFrom="@D(today.AddDays(-6))" asp-route-dateTo="@D(today)">آخر 7 أيام</a>
+        <a class="btn btn-sm btn-outline-secondary" asp-action="History"
+           asp-route-dateFrom="@D(today.AddDays(-29))" asp-route-dateTo="@D(today)">آخر 30 يوماً</a>
+        <a class="btn btn-sm btn-outline-secondary" asp-action="History">الكل</a>
+    </div>
+
+    <form method="get" asp-action="History" class="glass-card mb-3 reveal">
+        <div class="row g-3 align-items-end">
+            <div class="col-6 col-md-3">
+                <label class="form-label small">من تاريخ</label>
+                <input type="date" name="dateFrom" class="form-control"data-max-today
+                       value="@Model.DateFrom?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small">إلى تاريخ</label>
+                <input type="date" name="dateTo" class="form-control"data-max-today
+                       value="@Model.DateTo?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small">الحالة</label>
+                <select name="status" class="form-select">
+                    <option value="">كل الحالات</option>
+                    @foreach (var x in labels)
+                    {
+                        <option value="@x.Key" selected="@(Model.Status == x.Key)">@x.Value</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small">بحث</label>
+                <input type="text" name="search" class="form-control" placeholder="اسم أو هاتف"
+                       value="@Model.Search" />
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-gradient flex-grow-1">تطبيق</button>
+                <a class="btn btn-light" asp-action="History">مسح</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-md">
+            <a class="stat-link mini-stat @(Model.Status == null ? "active" : "")"
+               asp-action="History" asp-all-route-data="QS()">
+                <div class="text-muted small">إجمالي الفترة</div>
+                <div class="num">@Model.PeriodTotal</div>
+            </a>
+        </div>
+        @foreach (var t in tiles)
+        {
+            <div class="col-6 col-md">
+                <a class="stat-link mini-stat @(Model.Status == t ? "active" : "")"
+                   asp-action="History" asp-all-route-data="QS(t)">
+                    <div class="text-muted small">@labels[t]</div>
+                    <div class="num">@Model.CountOf(t)</div>
+                </a>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="empty-state glass-card reveal">
+            <i class="bi bi-inbox"></i>
+            <h5 class="fw-bold mt-3">لا توجد حجوزات مطابقة للبحث</h5>
+            <p class="text-muted mb-0">جرّب تغيير الفترة أو الفلاتر.</p>
+        </div>
+    }
+    else
+    {
+        <div class="text-muted small mb-2">عدد النتائج: <strong>@Model.TotalCount</strong></div>
+
+        <div class="glass-card p-0 overflow-hidden reveal">
+            <div class="table-responsive">
+               <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th class="text-center" style="width:110px">رقم الدور</th>
+                            <th>المريض</th>
+                            <th>الهاتف</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@b.Date.ToString("yyyy/MM/dd")</div>
+                                    <div class="text-muted small">@b.Date.ToString("dddd", ar)</div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="num-bubble mx-auto" style="width:38px;height:38px">@b.QueueNumber</span>
+                                </td>
+                                <td class="fw-bold">@b.User.Name</td>
+                                <td><span dir="ltr">@b.User.Phone</span></td>
+                                <td><partial name="_StatusBadge" model="b.Status" /></td>
+                            </tr>
+                        }
+                    </tbody>
+               </table>
+            </div>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="mt-3">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="History" asp-all-route-data="QS(Model.Status, Model.Page - 1)">السابق</a>
+                    </li>
+                    @for (var p = Math.Max(1, Model.Page - 2); p <= Math.Min(Model.TotalPages, Model.Page + 2); p++)
+                    {
+                        <li class="page-item @(p == Model.Page ? "active" : "")">
+                            <a class="page-link" asp-action="History" asp-all-route-data="QS(Model.Status, p)">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="History" asp-all-route-data="QS(Model.Status, Model.Page + 1)">التالي</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+</div>

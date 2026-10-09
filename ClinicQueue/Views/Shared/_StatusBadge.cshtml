@@ -1,0 +1,14 @@
+@model ClinicQueue.Models.BookingStatus
+@using ClinicQueue.Models
+@{
+    var (text, css) = Model switch
+    {
+        BookingStatus.Waiting    => ("بالانتظار", "text-bg-warning"),
+        BookingStatus.InProgress => ("عند الطبيب", "text-bg-primary"),
+        BookingStatus.Done       => ("تمت المعاينة", "text-bg-success"),
+        BookingStatus.Skipped    => ("تم التخطي", "text-bg-secondary"),
+        BookingStatus.Expired    => ("انتهى دون معاينة", "text-bg-dark"),
+        _                        => ("ملغي", "text-bg-danger")
+    };
+}
+<span class="badge rounded-pill @css px-3 py-2">@text</span>

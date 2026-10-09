@@ -1,4 +1,6 @@
 using ClinicQueue.Models;
+using ClinicQueue.ViewModels;
+namespace ClinicQueue.Services.Interfaces;
 public interface IDoctorQueueService
 {
     Task<List<Booking>> GetTodayAsync();
@@ -10,4 +12,7 @@ public interface IDoctorQueueService
     Task UpdateWorkingHoursAsync(TimeOnly start, TimeOnly end);
     Task UpdateCapacityAsync(int capacity);
     Task<bool> IsFullAsync();
+    Task<DoctorHistoryVM> GetDoctorHistoryAsync(
+    DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, string? search,
+    int page, int pageSize = 20);
 }

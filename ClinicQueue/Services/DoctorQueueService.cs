@@ -112,6 +112,67 @@ public class DoctorQueueService :IDoctorQueueService
         return true;
     }
     
+     // أي حجز من يوم سابق ما زال بالانتظار أو عند الطبيب يُغلق تلقائياً
+    private async Task ExpireOldBookingsAsync()
+    {
+        var today = Today;
+        await _db.Bookings
+            .Where(b => b.Date < today &&
+                        (b.Status == BookingStatus.Waiting || b.Status == BookingStatus.InProgress))
+            .ExecuteUpdateAsync(s => s.SetProperty(b => b.Status, BookingStatus.Expired));
+    }
+
+    public async Task<DoctorHistoryVM> GetDoctorHistoryAsync(
+    DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, string? search,
+    int page, int pageSize = 20)
+    {
+        await ExpireOldBookingsAsync();
+        var doctor = await _doctors.GetAsync();
+    
+        var baseQuery = _db.Bookings.AsNoTracking().Where(b => b.DoctorId == doctor.Id);
+    
+        if (dateFrom.HasValue) baseQuery = baseQuery.Where(b => b.Date >= dateFrom.Value);
+        if (dateTo.HasValue)   baseQuery = baseQuery.Where(b => b.Date <= dateTo.Value);
+    
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim();
+            baseQuery = baseQuery.Where(b => b.User.Name.Contains(s) || b.User.Phone.Contains(s));
+        }
+    
+        // ملخّص الفترة (بدون فلتر الحالة)
+        var counts = await baseQuery
+            .GroupBy(b => b.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Status, x => x.Count);
+    
+        var filtered = status.HasValue ? baseQuery.Where(b => b.Status == status.Value) : baseQuery;
+    
+        var total = await filtered.CountAsync();
+        var totalPages = Math.Max(1, (int)Math.Ceiling(total / (double)pageSize));
+        page = Math.Clamp(page, 1, totalPages);
+    
+        var items = await filtered
+            .Include(b => b.User)
+            .OrderByDescending(b => b.Date)
+            .ThenBy(b => b.QueueNumber)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    
+        return new DoctorHistoryVM
+        {
+            DateFrom = dateFrom,
+            DateTo = dateTo,
+            Status = status,
+            Search = search,
+            Items = items,
+            Counts = counts,
+            TotalCount = total,
+            Page = page,
+            TotalPages = totalPages
+        };
+    }
 
 
 }
